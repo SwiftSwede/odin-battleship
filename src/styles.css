@@ -1,0 +1,32 @@
+#boards-container {
+  display: flex;
+  justify-content: center;
+  gap: 50px;
+  margin-top: 20px;
+}
+
+.gameboard {
+  display: grid;
+  grid-template-columns: repeat(10, 40px);
+  grid-template-rows: repeat(10, 40px);
+  gap: 2px;
+  margin: 20px auto;
+  width: max-content;
+}
+
+.cell {
+  width: 40px;
+  height: 40px;
+  background-color: lightblue;
+  border: 1px solid #333;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.cell.clicked {
+  background-color: green;
+}
+
+.cell.hovered {
+  background-color: red;
+}
