@@ -21,6 +21,12 @@ export default class toDoController {
       console.log("Hovered at", x, y);
       this.handlePreviewShip(x, y);
     });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "r" || e.key === "R") {
+        this.handleToggleShip();
+      }
+    });
   }
 
   handlePlaceShip(ship, x, y, direction) {
@@ -44,5 +50,32 @@ export default class toDoController {
     this.view.previewShip(positions);
   }
 
-  toggleShipPreview(ship, x, y, direction) {}
+  handleToggleShip() {
+    this.currentDirection =
+      this.currentDirection === "horizontal" ? "vertical" : "horizontal";
+
+    // Use the model's logic to recalculate positions
+    const hoveredCell = document.querySelector(".cell:hover");
+    if (hoveredCell) {
+      const x = parseInt(hoveredCell.dataset.x);
+      const y = parseInt(hoveredCell.dataset.y);
+
+      // Get ship info
+      const shipName = Object.keys(this.model.gameboard.ships)[
+        this.currentShip
+      ];
+      const ship = this.model.gameboard.ships[shipName];
+
+      // Use existing model logic
+      const positions = this.model.gameboard.calculateShipPosition(
+        ship,
+        x,
+        y,
+        this.currentDirection
+      );
+
+      // Use existing view logic
+      this.view.previewShip(positions);
+    }
+  }
 }

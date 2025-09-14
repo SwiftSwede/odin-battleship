@@ -33,9 +33,10 @@ class toDoView {
   }
 
   getCells() {
-    return document.querySelectorAll(".cell");
+    return document.querySelectorAll("#player-board .cell");
   }
 
+  //Adds event listeners in order to detect position of the ship
   initPreviewShip(handler) {
     // Add hover effects
     const cells = this.getCells();
@@ -47,22 +48,14 @@ class toDoView {
         handler(x, y); // ✅ Call the handler to trigger ship preview
       });
     });
-
-    cells.forEach((cell) => {
-      cell.addEventListener("mouseleave", (e) => {
-        const targetCell = e.target;
-        e.target.classList.remove("hovered");
-      });
-    });
   }
 
   previewShip(positions) {
     const playerBoard = document.getElementById("player-board");
-    console.log("Player board exists:", !!playerBoard);
-    console.log("Player board:", playerBoard);
 
-    console.log("previewShip called with positions:", positions);
-    console.log("Number of positions:", positions.length);
+    document.querySelectorAll(".hovered").forEach((cell) => {
+      cell.classList.remove("hovered");
+    });
 
     positions.forEach((pos) => {
       console.log("Looking for cell at:", pos.x, pos.y);
@@ -71,15 +64,27 @@ class toDoView {
       );
       if (cell) {
         cell.classList.add("hovered");
-        console.log("Found and highlighted cell:", pos.x, pos.y);
       } else {
         console.log("Cell not found for:", pos.x, pos.y);
       }
     });
   }
 
-  bindToggleShipPreview(handler) {
-    const cells = this.getCells();
+  toggleShip() {
+    // Clear previous highlights
+    document.querySelectorAll(".hovered").forEach((cell) => {
+      cell.classList.remove("hovered");
+    });
+
+    // Add new highlights
+    positions.forEach((pos) => {
+      const cell = document.querySelector(
+        `#player-board [data-x="${pos.x}"][data-y="${pos.y}"]`
+      );
+      if (cell) {
+        cell.classList.add("hovered");
+      }
+    });
   }
 
   bindPlaceShip(handler) {
