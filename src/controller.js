@@ -13,8 +13,9 @@ export default class toDoController {
 
   init() {
     this.view.setUpBoards();
-    this.view.bindPlaceShip((x, y) => {
+    this.view.initPlaceShip((x, y) => {
       console.log("Clicked at", x, y);
+      this.handlePlaceShip(x, y);
     });
 
     this.view.initPreviewShip((x, y) => {
@@ -29,13 +30,21 @@ export default class toDoController {
     });
   }
 
-  handlePlaceShip(ship, x, y, direction) {
-    console.log("placing ship");
-  }
-
   handlePreviewShip(x, y) {
+    const totalShips = Object.keys(this.model.gameboard.ships).length;
+    if (this.currentShip >= totalShips) {
+      return; // Don't show preview if all ships are placed
+    }
+
     const shipName = Object.keys(this.model.gameboard.ships)[this.currentShip];
+    if (!shipName) {
+      return; // No more ships to place
+    }
     const ship = this.model.gameboard.ships[shipName]; // Add this line to get the ship object
+    if (!ship) {
+      return; // Ship doesn't exist
+    }
+
     const direction = this.currentDirection;
 
     //Calculate positions in controller
@@ -46,7 +55,7 @@ export default class toDoController {
       direction
     );
 
-    //Pass positions to view
+    //pass positions to view
     this.view.previewShip(positions);
   }
 
@@ -77,5 +86,39 @@ export default class toDoController {
       // Use existing view logic
       this.view.previewShip(positions);
     }
+  }
+
+  handlePlaceShip(x, y) {
+    const totalShips = Object.keys(this.model.gameboard.ships).length;
+    if (this.currentShip >= totalShips) {
+      return; // Don't show preview if all ships are placed
+    }
+
+    console.log("placing ship");
+    const shipName = Object.keys(this.model.gameboard.ships)[this.currentShip];
+    if (!shipName) {
+      return; // No more ships to place
+    }
+
+    const ship = this.model.gameboard.ships[shipName];
+
+    if (!ship) {
+      return; // Ship doesn't exist
+    }
+
+    const direction = this.currentDirection;
+
+    const positions = this.model.gameboard.calculateShipPosition(
+      ship,
+      x,
+      y,
+      direction
+    );
+
+    this.model.gameboard.placeShip(ship, x, y, this.currentDirection);
+
+    this.view.placeShip(positions);
+
+    this.currentShip++;
   }
 }

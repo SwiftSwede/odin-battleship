@@ -50,6 +50,18 @@ class toDoView {
     });
   }
 
+  initPlaceShip(handler) {
+    const cells = document.querySelectorAll("#player-board .cell");
+
+    cells.forEach((cell) => {
+      cell.addEventListener("click", (e) => {
+        const x = parseInt(e.target.dataset.x);
+        const y = parseInt(e.target.dataset.y);
+        handler(x, y);
+      });
+    });
+  }
+
   previewShip(positions) {
     const playerBoard = document.getElementById("player-board");
 
@@ -87,20 +99,23 @@ class toDoView {
     });
   }
 
-  bindPlaceShip(handler) {
-    const cells = this.getCells();
+  placeShip(positions) {
+    const playerBoard = document.getElementById("player-board");
 
-    cells.forEach((cell) => {
-      cell.addEventListener("click", (e) => {
-        const targetCell = e.target;
+    document.querySelectorAll(".hovered").forEach((cell) => {
+      cell.classList.remove("hovered");
+    });
 
-        targetCell.classList.toggle("clicked");
-
-        const x = parseInt(e.target.dataset.x);
-        const y = parseInt(e.target.dataset.y);
-
-        handler(x, y);
-      });
+    positions.forEach((pos) => {
+      console.log("Looking for cell at:", pos.x, pos.y);
+      const cell = document.querySelector(
+        `#player-board [data-x="${pos.x}"][data-y="${pos.y}"]`
+      );
+      if (cell) {
+        cell.classList.add("clicked");
+      } else {
+        console.log("Cell not found for:", pos.x, pos.y);
+      }
     });
   }
 }
