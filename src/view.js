@@ -32,6 +32,22 @@ class toDoView {
     return gameboard;
   }
 
+  createPlayerMessage() {
+    const feedbackDiv = document.createElement("div");
+    feedbackDiv.id = "user-feedback";
+    feedbackDiv.classList.add("feedback");
+
+    const feedbackText = document.createElement("p");
+    feedbackText.id = "feedback-text";
+    feedbackText.textContent = "Feedback will be displayed here";
+    feedbackDiv.appendChild(feedbackText);
+
+    const mainContainer = document.getElementById("container");
+    mainContainer.appendChild(feedbackDiv);
+
+    return feedbackDiv;
+  }
+
   getCells() {
     return document.querySelectorAll("#player-board .cell");
   }

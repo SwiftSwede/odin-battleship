@@ -13,6 +13,7 @@ export default class toDoController {
 
   init() {
     this.view.setUpBoards();
+    this.view.createPlayerMessage();
     this.view.initPlaceShip((x, y) => {
       console.log("Clicked at", x, y);
       this.handlePlaceShip(x, y);
@@ -89,23 +90,10 @@ export default class toDoController {
   }
 
   handlePlaceShip(x, y) {
-    const totalShips = Object.keys(this.model.gameboard.ships).length;
-    if (this.currentShip >= totalShips) {
-      return; // Don't show preview if all ships are placed
-    }
-
     console.log("placing ship");
     const shipName = Object.keys(this.model.gameboard.ships)[this.currentShip];
-    if (!shipName) {
-      return; // No more ships to place
-    }
-
     const ship = this.model.gameboard.ships[shipName];
-
-    if (!ship) {
-      return; // Ship doesn't exist
-    }
-
+    const totalShips = Object.keys(this.model.gameboard.ships).length;
     const direction = this.currentDirection;
 
     const positions = this.model.gameboard.calculateShipPosition(
@@ -115,10 +103,41 @@ export default class toDoController {
       direction
     );
 
+    if (this.currentShip >= totalShips) {
+      return; // Don't show preview if all ships are placed
+    }
+
+    if (!shipName) {
+      return; // No more ships to place
+    }
+
+    if (!ship) {
+      return; // Ship doesn't exist
+    }
+
     this.model.gameboard.placeShip(ship, x, y, this.currentDirection);
 
     this.view.placeShip(positions);
 
     this.currentShip++;
+
+    this.updatePlayerFeedback();
+  }
+
+  updatePlayerFeedback() {
+    const feedbackText = document.getElementById("feedback-text");
+    const totalShips = Object.keys(this.model.gameboard.ships).length;
+
+    if (this.currentShip >= totalShips) {
+      feedbackText.textContent =
+        "All ships placed successfully! Ready to start the game.";
+    } else {
+      const nextShip = Object.keys(this.model.gameboard.ships)[
+        this.currentShip
+      ];
+      feedbackText.textContent = `Placing: ${nextShip} (${
+        this.model.gameboard.ships[nextShip].length
+      } cells). Ships left: ${totalShips - this.currentShip}`;
+    }
   }
 }
