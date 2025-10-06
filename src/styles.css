@@ -30,3 +30,7 @@
 .cell.hovered {
   background-color: red;
 }
+
+.cell.opponent-ship {
+  background-color: blue;
+}

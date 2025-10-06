@@ -9,6 +9,7 @@ export default class toDoController {
     //state variables to be passed to the view
     this.currentShip = 0;
     this.currentDirection = "horizontal";
+    this.testShipsPlaced = false; // Add flag to prevent multiple calls
   }
 
   init() {
@@ -29,6 +30,51 @@ export default class toDoController {
         this.handleToggleShip();
       }
     });
+  }
+
+  placeTestShips() {
+    console.log("placeTestShips called");
+    const testShips = [
+      { name: "carrier", x: 0, y: 0, direction: "horizontal" },
+      { name: "battleship", x: 0, y: 6, direction: "horizontal" },
+      { name: "cruiser", x: 2, y: 0, direction: "horizontal" },
+    ];
+
+    testShips.forEach((ship) => {
+      console.log(
+        `Placing ${ship.name} at ${ship.x},${ship.y} ${ship.direction}`
+      );
+      const shipObject = this.model.opponentGameboard.ships[ship.name];
+
+      // Check if any of the positions are already occupied
+      const positions = this.model.opponentGameboard.calculateShipPosition(
+        shipObject,
+        ship.x,
+        ship.y,
+        ship.direction
+      );
+
+      console.log(`Positions for ${ship.name}:`, positions);
+
+      positions.forEach((pos) => {
+        const cellHasShip =
+          this.model.opponentGameboard.board[pos.x][pos.y].ship !== null;
+        console.log(`Position ${pos.x},${pos.y} has ship:`, cellHasShip);
+      });
+
+      this.model.opponentGameboard.placeShip(
+        shipObject,
+        ship.x,
+        ship.y,
+        ship.direction
+      );
+    });
+
+    console.log(
+      "Test ships placed on opponent board:",
+      this.model.opponentGameboard.board
+    );
+    console.log("Opponent ships object:", this.model.opponentGameboard.ships);
   }
 
   handlePreviewShip(x, y) {
@@ -96,17 +142,6 @@ export default class toDoController {
     const totalShips = Object.keys(this.model.gameboard.ships).length;
     const direction = this.currentDirection;
 
-    const positions = this.model.gameboard.calculateShipPosition(
-      ship,
-      x,
-      y,
-      direction
-    );
-
-    if (this.currentShip >= totalShips) {
-      return; // Don't show preview if all ships are placed
-    }
-
     if (!shipName) {
       return; // No more ships to place
     }
@@ -115,6 +150,13 @@ export default class toDoController {
       return; // Ship doesn't exist
     }
 
+    const positions = this.model.gameboard.calculateShipPosition(
+      ship,
+      x,
+      y,
+      direction
+    );
+
     this.model.gameboard.placeShip(ship, x, y, this.currentDirection);
 
     this.view.placeShip(positions);
@@ -122,6 +164,20 @@ export default class toDoController {
     this.currentShip++;
 
     this.updatePlayerFeedback();
+
+    console.log(
+      `Current ship: ${this.currentShip}, Total ships: ${totalShips}`
+    );
+
+    // Check if all ships are placed AFTER incrementing
+    if (this.currentShip >= totalShips && !this.testShipsPlaced) {
+      console.log(
+        "All ships placed! Calling placeTestShips and displayOpponentShips"
+      );
+      this.placeTestShips();
+      this.view.displayOpponentShips(this.model.opponentGameboard);
+      this.testShipsPlaced = true; // Mark as placed to prevent multiple calls
+    }
   }
 
   updatePlayerFeedback() {

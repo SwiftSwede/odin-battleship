@@ -139,6 +139,7 @@ export class Player {
 export default class toDoModel {
   constructor() {
     this.gameboard = new Gameboard();
+    this.opponentGameboard = new Gameboard();
     console.log("Model initialized");
   }
 }

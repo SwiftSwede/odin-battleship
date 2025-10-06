@@ -68,11 +68,14 @@ class toDoView {
 
   initPlaceShip(handler) {
     const cells = document.querySelectorAll("#player-board .cell");
+    console.log("initPlaceShip called, found cells:", cells.length);
 
     cells.forEach((cell) => {
       cell.addEventListener("click", (e) => {
+        console.log("Cell clicked!");
         const x = parseInt(e.target.dataset.x);
         const y = parseInt(e.target.dataset.y);
+        console.log("Click coordinates:", x, y);
         handler(x, y);
       });
     });
@@ -131,6 +134,23 @@ class toDoView {
         cell.classList.add("clicked");
       } else {
         console.log("Cell not found for:", pos.x, pos.y);
+      }
+    });
+  }
+
+  displayOpponentShips(opponentGameboard) {
+    console.log("displayOpponentShips called with:", opponentGameboard);
+    const cells = document.querySelectorAll("#opponent-board .cell");
+    console.log("Found cells:", cells.length);
+
+    cells.forEach((cell) => {
+      const x = parseInt(cell.dataset.x);
+      const y = parseInt(cell.dataset.y);
+      const hasShip = opponentGameboard.board[x][y].ship !== null;
+      console.log(`Cell ${x},${y} has ship:`, hasShip);
+      if (hasShip) {
+        console.log(`Adding opponent-ship class to cell ${x},${y}`);
+        cell.classList.add("opponent-ship");
       }
     });
   }
