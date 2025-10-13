@@ -81,6 +81,17 @@ class toDoView {
     });
   }
 
+  initAttack(handler) {
+    const cells = document.querySelectorAll("#opponent-board .cell");
+    cells.forEach((cell) => {
+      cell.addEventListener("click", (e) => {
+        const x = parseInt(e.target.dataset.x);
+        const y = parseInt(e.target.dataset.y);
+        handler(x, y);
+      });
+    });
+  }
+
   previewShip(positions) {
     const playerBoard = document.getElementById("player-board");
 
@@ -136,6 +147,19 @@ class toDoView {
         console.log("Cell not found for:", pos.x, pos.y);
       }
     });
+  }
+
+  receiveAttack(x, y, attackResult) {
+    const cell = document.querySelector(
+      `#opponent-board [data-x="${x}"][data-y="${y}"]`
+    );
+    if (cell) {
+      if (attackResult.result === "hit") {
+        cell.classList.add("hit");
+      } else {
+        cell.classList.add("miss");
+      }
+    }
   }
 
   displayOpponentShips(opponentGameboard) {

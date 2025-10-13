@@ -34,3 +34,11 @@
 .cell.opponent-ship {
   background-color: blue;
 }
+
+.cell.hit {
+  background-color: black;
+}
+
+.cell.miss {
+  background-color: gray;
+}

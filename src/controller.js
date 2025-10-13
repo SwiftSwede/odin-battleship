@@ -25,6 +25,11 @@ export default class toDoController {
       this.handlePreviewShip(x, y);
     });
 
+    this.view.initAttack((x, y) => {
+      console.log("Attacked at", x, y);
+      this.handleReceiveAttack(x, y);
+    });
+
     document.addEventListener("keydown", (e) => {
       if (e.key === "r" || e.key === "R") {
         this.handleToggleShip();
@@ -178,6 +183,11 @@ export default class toDoController {
       this.view.displayOpponentShips(this.model.opponentGameboard);
       this.testShipsPlaced = true; // Mark as placed to prevent multiple calls
     }
+  }
+
+  handleReceiveAttack(x, y) {
+    const attackResult = this.model.opponentGameboard.receiveAttack(x, y);
+    this.view.receiveAttack(x, y, attackResult);
   }
 
   updatePlayerFeedback() {

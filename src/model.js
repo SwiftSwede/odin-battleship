@@ -70,46 +70,29 @@ export class Gameboard {
       this.board[pos.x][pos.y].ship = ship;
     });
 
-    //Check if any cell in the ship's path is already occupied
-    // for (let i = 0; i < ship.length; i++) {
-    //   let x = startX;
-    //   let y = startY;
-
-    //   if (direction === "horizontal") {
-    //     y += i;
-    //   } else if (direction === "vertical") {
-    //     x += i;
-    //   }
-
-    //   if (this.board[x][y].ship !== null) {
-    //     throw new Error("This ship has already been placed");
-    //   }
-    // }
-
-    // for (let i = 0; i < ship.length; i++) {
-    //   if (direction === "horizontal") {
-    //     this.board[startX][startY + i].ship = ship;
-    //   } else if (direction === "vertical") {
-    //     this.board[startX + i][startY].ship = ship;
-    //   }
-    // }
-
     ship.placed = true;
   }
 
   receiveAttack(xCoordinate, yCoordinate) {
     const cell = this.board[xCoordinate][yCoordinate];
+
     //Check if already hit
-    if (cell.isHit) return;
+    if (cell.isHit) {
+      return { result: "already hit", ship: null };
+    }
+
     //Apply hit to ships hit counter
     if (cell.ship) {
       cell.ship.getHit();
       cell.isHit = true;
+
       if (cell.ship.isSunk()) {
+        return { result: "sunk", ship: cell.ship };
       }
+      return { result: "hit", ship: null };
     } else {
       this.missedAttacks++;
-      return "miss";
+      return { result: "miss", ship: null };
     }
   }
 
