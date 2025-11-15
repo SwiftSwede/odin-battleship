@@ -154,7 +154,7 @@ class toDoView {
       `#opponent-board [data-x="${x}"][data-y="${y}"]`
     );
     if (cell) {
-      if (attackResult.result === "hit") {
+      if (attackResult.result === "hit" || attackResult.result === "sunk") {
         cell.classList.add("hit");
       } else {
         cell.classList.add("miss");

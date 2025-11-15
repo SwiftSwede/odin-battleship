@@ -37,50 +37,50 @@ export default class toDoController {
     });
   }
 
-  placeTestShips() {
-    console.log("placeTestShips called");
-    const testShips = [
-      { name: "carrier", x: 0, y: 0, direction: "horizontal" },
-      { name: "battleship", x: 0, y: 6, direction: "horizontal" },
-      { name: "cruiser", x: 2, y: 0, direction: "horizontal" },
-    ];
+  // placeTestShips() {
+  //   console.log("placeTestShips called");
+  //   const testShips = [
+  //     { name: "carrier", x: 0, y: 0, direction: "horizontal" },
+  //     { name: "battleship", x: 0, y: 6, direction: "horizontal" },
+  //     { name: "cruiser", x: 2, y: 0, direction: "horizontal" },
+  //   ];
 
-    testShips.forEach((ship) => {
-      console.log(
-        `Placing ${ship.name} at ${ship.x},${ship.y} ${ship.direction}`
-      );
-      const shipObject = this.model.opponentGameboard.ships[ship.name];
+  //   testShips.forEach((ship) => {
+  //     console.log(
+  //       `Placing ${ship.name} at ${ship.x},${ship.y} ${ship.direction}`
+  //     );
+  //     const shipObject = this.model.opponentGameboard.ships[ship.name];
 
-      // Check if any of the positions are already occupied
-      const positions = this.model.opponentGameboard.calculateShipPosition(
-        shipObject,
-        ship.x,
-        ship.y,
-        ship.direction
-      );
+  //     // Check if any of the positions are already occupied
+  //     const positions = this.model.opponentGameboard.calculateShipPosition(
+  //       shipObject,
+  //       ship.x,
+  //       ship.y,
+  //       ship.direction
+  //     );
 
-      console.log(`Positions for ${ship.name}:`, positions);
+  //     console.log(`Positions for ${ship.name}:`, positions);
 
-      positions.forEach((pos) => {
-        const cellHasShip =
-          this.model.opponentGameboard.board[pos.x][pos.y].ship !== null;
-        console.log(`Position ${pos.x},${pos.y} has ship:`, cellHasShip);
-      });
+  //     positions.forEach((pos) => {
+  //       const cellHasShip =
+  //         this.model.opponentGameboard.board[pos.x][pos.y].ship !== null;
+  //       console.log(`Position ${pos.x},${pos.y} has ship:`, cellHasShip);
+  //     });
 
-      this.model.opponentGameboard.placeShip(
-        shipObject,
-        ship.x,
-        ship.y,
-        ship.direction
-      );
-    });
+  //     this.model.opponentGameboard.placeShip(
+  //       shipObject,
+  //       ship.x,
+  //       ship.y,
+  //       ship.direction
+  //     );
+  //   });
 
-    console.log(
-      "Test ships placed on opponent board:",
-      this.model.opponentGameboard.board
-    );
-    console.log("Opponent ships object:", this.model.opponentGameboard.ships);
-  }
+  //   console.log(
+  //     "Test ships placed on opponent board:",
+  //     this.model.opponentGameboard.board
+  //   );
+  //   console.log("Opponent ships object:", this.model.opponentGameboard.ships);
+  // }
 
   handlePreviewShip(x, y) {
     const totalShips = Object.keys(this.model.gameboard.ships).length;
@@ -179,10 +179,75 @@ export default class toDoController {
       console.log(
         "All ships placed! Calling placeTestShips and displayOpponentShips"
       );
-      this.placeTestShips();
+      // this.placeTestShips();
+      this.placeAllAIShips();
       this.view.displayOpponentShips(this.model.opponentGameboard);
       this.testShipsPlaced = true; // Mark as placed to prevent multiple calls
     }
+  }
+
+  placeAllAIShips() {
+    const shipNames = Object.keys(this.model.opponentGameboard.ships);
+
+    shipNames.forEach((shipName) => {
+      const ship = this.model.opponentGameboard.ships[shipName];
+      const shipLength = ship.length;
+
+      // Find all valid positions for this ship
+      const validPositions = this.getValidPositions(shipLength);
+
+      // Pick a random valid position
+      const randomPosition =
+        validPositions[Math.floor(Math.random() * validPositions.length)];
+
+      // Place the ship
+      this.model.opponentGameboard.placeShip(
+        ship,
+        randomPosition.x,
+        randomPosition.y,
+        randomPosition.direction
+      );
+    });
+  }
+
+  getValidPositions(shipLength) {
+    //Create an array to store valid positions
+    const validPositions = [];
+
+    for (let x = 0; x < 10; x++) {
+      for (let y = 0; y < 10; y++) {
+        // Check horizontal placement and break if the ship can't be placed
+        if (y + shipLength <= 10) {
+          let canPlace = true;
+          for (let i = 0; i < shipLength; i++) {
+            if (this.model.opponentGameboard.board[x][y + i].ship !== null) {
+              canPlace = false;
+              break;
+            }
+          }
+          //If the ship can be placed, add the position to the validPositions array
+          if (canPlace) {
+            validPositions.push({ x, y, direction: "horizontal" });
+          }
+        }
+
+        // Check vertical placement
+        if (x + shipLength <= 10) {
+          let canPlace = true;
+          for (let i = 0; i < shipLength; i++) {
+            if (this.model.opponentGameboard.board[x + i][y].ship !== null) {
+              canPlace = false;
+              break;
+            }
+          }
+          if (canPlace) {
+            validPositions.push({ x, y, direction: "vertical" });
+          }
+        }
+      }
+    }
+
+    return validPositions;
   }
 
   handleReceiveAttack(x, y) {
