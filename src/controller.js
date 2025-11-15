@@ -10,6 +10,7 @@ export default class toDoController {
     this.currentShip = 0;
     this.currentDirection = "horizontal";
     this.testShipsPlaced = false; // Add flag to prevent multiple calls
+    this.currentTurn = 0;
   }
 
   init() {
@@ -251,8 +252,36 @@ export default class toDoController {
   }
 
   handleReceiveAttack(x, y) {
+    if (this.currentTurn !== 0) return;
+
     const attackResult = this.model.opponentGameboard.receiveAttack(x, y);
-    this.view.receiveAttack(x, y, attackResult);
+    this.view.showAttackResult(x, y, attackResult);
+
+    if (attackResult.result === "already hit") return;
+    if (this.checkWin(this.model.opponentGameboard)) {
+    }
+    this.currentTurn = 1;
+    this.handleComputerAttack();
+  }
+
+  handleComputerAttack() {
+    if (this.currentTurn !== 1) return;
+
+    let attackResult;
+    let x, y;
+
+    do {
+      x = Math.floor(Math.random() * 10);
+      y = Math.floor(Math.random() * 10);
+      attackResult = this.model.gameboard.receiveAttack(x, y);
+    } while (attackResult.result === "already hit");
+
+    this.view.showOpponenetAttackResult(x, y, attackResult);
+
+    if (this.checkWin(this.model.gameboard)) {
+    }
+    this.currentTurn = 0;
+    // this.handleReceiveAttack();
   }
 
   updatePlayerFeedback() {
@@ -270,5 +299,9 @@ export default class toDoController {
         this.model.gameboard.ships[nextShip].length
       } cells). Ships left: ${totalShips - this.currentShip}`;
     }
+  }
+
+  checkWin(gameboard) {
+    return gameboard.allShipsSunk();
   }
 }

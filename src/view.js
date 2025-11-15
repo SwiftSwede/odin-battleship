@@ -149,9 +149,22 @@ class toDoView {
     });
   }
 
-  receiveAttack(x, y, attackResult) {
+  showAttackResult(x, y, attackResult) {
     const cell = document.querySelector(
       `#opponent-board [data-x="${x}"][data-y="${y}"]`
+    );
+    if (cell) {
+      if (attackResult.result === "hit" || attackResult.result === "sunk") {
+        cell.classList.add("hit");
+      } else {
+        cell.classList.add("miss");
+      }
+    }
+  }
+
+  showOpponenetAttackResult(x, y, attackResult) {
+    const cell = document.querySelector(
+      `#player-board [data-x="${x}"][data-y="${y}"]`
     );
     if (cell) {
       if (attackResult.result === "hit" || attackResult.result === "sunk") {
