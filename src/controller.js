@@ -11,6 +11,15 @@ export default class toDoController {
     this.currentDirection = "horizontal";
     this.testShipsPlaced = false; // Add flag to prevent multiple calls
     this.currentTurn = 0;
+
+    //AI state variables
+    this.ai = {
+      mode: "hunt",
+      attacked: Set(),
+      queue: [],
+      lastHit: null,
+      orientation: null,
+    };
   }
 
   init() {
@@ -37,51 +46,6 @@ export default class toDoController {
       }
     });
   }
-
-  // placeTestShips() {
-  //   console.log("placeTestShips called");
-  //   const testShips = [
-  //     { name: "carrier", x: 0, y: 0, direction: "horizontal" },
-  //     { name: "battleship", x: 0, y: 6, direction: "horizontal" },
-  //     { name: "cruiser", x: 2, y: 0, direction: "horizontal" },
-  //   ];
-
-  //   testShips.forEach((ship) => {
-  //     console.log(
-  //       `Placing ${ship.name} at ${ship.x},${ship.y} ${ship.direction}`
-  //     );
-  //     const shipObject = this.model.opponentGameboard.ships[ship.name];
-
-  //     // Check if any of the positions are already occupied
-  //     const positions = this.model.opponentGameboard.calculateShipPosition(
-  //       shipObject,
-  //       ship.x,
-  //       ship.y,
-  //       ship.direction
-  //     );
-
-  //     console.log(`Positions for ${ship.name}:`, positions);
-
-  //     positions.forEach((pos) => {
-  //       const cellHasShip =
-  //         this.model.opponentGameboard.board[pos.x][pos.y].ship !== null;
-  //       console.log(`Position ${pos.x},${pos.y} has ship:`, cellHasShip);
-  //     });
-
-  //     this.model.opponentGameboard.placeShip(
-  //       shipObject,
-  //       ship.x,
-  //       ship.y,
-  //       ship.direction
-  //     );
-  //   });
-
-  //   console.log(
-  //     "Test ships placed on opponent board:",
-  //     this.model.opponentGameboard.board
-  //   );
-  //   console.log("Opponent ships object:", this.model.opponentGameboard.ships);
-  // }
 
   handlePreviewShip(x, y) {
     const totalShips = Object.keys(this.model.gameboard.ships).length;
@@ -267,21 +231,62 @@ export default class toDoController {
   handleComputerAttack() {
     if (this.currentTurn !== 1) return;
 
-    let attackResult;
-    let x, y;
+    //helper function that picks a cell to attack
+    const attackCell = () => {
+      let cell;
+      if (this.ai.mode === "hunt") {
+        cell = this.pickHuntCell(); // parity + not in attacked
+      } else {
+        // 'target'
+        while (this.ai.queue.length && !cell) {
+          const c = this.ai.queue.shift();
+          if (!this.ai.attacked.has(`${c.x},${c.y}`)) cell = c;
+        }
+        if (!cell) {
+          this.ai.mode = "hunt";
+          cell = this.pickHuntCell();
+        }
+      }
+      return cell;
+    };
 
-    do {
-      x = Math.floor(Math.random() * 10);
-      y = Math.floor(Math.random() * 10);
-      attackResult = this.model.gameboard.receiveAttack(x, y);
-    } while (attackResult.result === "already hit");
-
-    this.view.showOpponenetAttackResult(x, y, attackResult);
+    const cell = attackCell();
+    const result = this.model.gameboard.receiveAttack(cell.x, cell.y);
+    this.ai.attacked.add(`${cell.x},${cell.y}`);
+    this.view.showPlayerBoardAttack(cell.x, cell.y, result);
 
     if (this.checkWin(this.model.gameboard)) {
+      this.handleGameOver("computer");
+      return;
     }
+
+    if (result.result === "hit" || result.result === "sunk") {
+      if (this.ai.mode === "hunt") {
+        this.ai.mode = "target";
+        this.ai.lastHit = { x: cell.x, y: cell.y };
+        this.ai.orientation = null;
+        this.ai.queue = [];
+        this.seedNeighbors({ x: cell.x, y: cell.y }); // must enqueue to this.ai.queue
+      } else {
+        // target
+        if (!this.ai.orientation && this.ai.lastHit) {
+          this.ai.orientation = this.inferOrientation(this.ai.lastHit, cell); // 'horizontal'|'vertical'
+        }
+        this.extendLine(cell, this.ai.orientation); // enqueue along line, skipping attacked/out-of-bounds
+        this.ai.lastHit = { x: cell.x, y: cell.y };
+      }
+      if (result.result === "sunk") {
+        this.ai.mode = "hunt";
+        this.ai.lastHit = null;
+        this.ai.orientation = null;
+        this.ai.queue = [];
+      }
+    } else if (result.result === "miss") {
+      // in target mode, just continue next time; do not reset attacked
+      // if queue empties next call → mode flips to 'hunt' in attackCell()
+    }
+
     this.currentTurn = 0;
-    // this.handleReceiveAttack();
   }
 
   updatePlayerFeedback() {
@@ -301,7 +306,79 @@ export default class toDoController {
     }
   }
 
+  //Helper functions
   checkWin(gameboard) {
     return gameboard.allShipsSunk();
+  }
+
+  isInBounds(x, y) {
+    return x >= 0 && x < 10 && y >= 0 && y < 10;
+  }
+
+  hasBeenAttacked(x, y) {
+    return this.model.gameboard.board[x][y].isHit;
+  }
+
+  markAttacked(x, y) {
+    this.ai.attacked.add(`${x},${y}`);
+  }
+
+  enqueueIfValid(x, y) {
+    if (this.isInBounds(x, y) && !this.hasBeenAttacked(x, y)) {
+      return { x, y };
+    }
+    return null;
+  }
+
+  pickHuntCell() {
+    const validCells = [];
+    for (let x = 0; x < 10; x++) {
+      for (let y = 0; y < 10; y++) {
+        if (this.enqueueIfValid(x, y)) {
+          validCells.push({ x, y });
+        }
+      }
+    }
+  }
+
+  seedNeighbors(x, y) {
+    const neighbors = [];
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        if (dx !== 0 || dy !== 0) {
+          neighbors.push({ x: x + dx, y: y + dy });
+        }
+      }
+    }
+  }
+
+  seedNeighbor(x, y) {
+    const neighbors = this.seedNeighbors(x, y);
+    neighbors.forEach((neighbor) => {
+      if (this.enqueueIfValid(neighbor.x, neighbor.y)) {
+        validCells.push(neighbor);
+      }
+    });
+  }
+
+  inferOrientation(x, y) {
+    const neighbors = this.seedNeighbors(x, y);
+    const orientations = [];
+    neighbors.forEach((neighbor) => {
+      if (this.enqueueIfValid(neighbor.x, neighbor.y)) {
+        orientations.push(neighbor);
+      }
+    });
+  }
+
+  extendLine(from, orientation) {
+    const line = [];
+    for (let i = 0; i < 10; i++) {
+      line.push({
+        x: from.x + i * orientation.x,
+        y: from.y + i * orientation.y,
+      });
+    }
+    return line;
   }
 }
